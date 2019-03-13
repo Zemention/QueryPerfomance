@@ -51,7 +51,7 @@ public class DataBaseConnectionFactory {
       return null;
     };
   }
-  //TODO use poop of connection
+
   public Map<String, Supplier<Connection>> getConnections() {
     return connections;
   }
