@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 
 @RestController
 public class QueryPerformanceController {
@@ -18,7 +20,7 @@ public class QueryPerformanceController {
 
   //TODO recive parameters for query
   @PostMapping(Constants.PATH_PERFORMANCE_QUERY)
-  public ReportDto getQueryPerformance(@RequestBody QueryPerformanceRequest content) {
+  public ReportDto getQueryPerformance(@RequestBody @Valid QueryPerformanceRequest content) {
     return performanceQueryService.testPerformance(content.getQueries());
   }
 

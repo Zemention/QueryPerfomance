@@ -1,10 +1,13 @@
 package com.itechart.perfomancequery.model;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class QueryPerformanceRequest {
 
-  //TODO validation
+  @NotNull
+  @NotEmpty
   private List<String> queries;
 
   public QueryPerformanceRequest(List<String> queries) {

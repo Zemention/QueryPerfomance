@@ -1,6 +1,6 @@
 package com.itechart.perfomancequery.services;
 
-import com.itechart.perfomancequery.dao.DataBaseStatement;
+import com.itechart.perfomancequery.dao.DataBaseConnectionFactory;
 import com.itechart.perfomancequery.model.report.ReportDto;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class PerformanceQueryServiceTest {
 
   @MockBean
-  private DataBaseStatement dataBaseStatement;
+  private DataBaseConnectionFactory dataBaseConnectionFactory;
 
   @Autowired
   private PerformanceQueryService performanceQueryService;
@@ -45,7 +45,7 @@ public class PerformanceQueryServiceTest {
     });
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     connections.put("mysql", mockConnection);
-    when(dataBaseStatement.getConnections()).thenReturn(connections);
+    when(dataBaseConnectionFactory.getConnections()).thenReturn(connections);
 
     ReportDto reportDto = performanceQueryService.testPerformance(queries);
     assertTrue(reportDto.getResult().values().stream().anyMatch((performanceResult -> performanceResult.get(0).getResultTest() >= 1000 * 100_0000)));

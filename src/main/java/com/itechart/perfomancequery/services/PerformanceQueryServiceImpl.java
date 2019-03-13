@@ -1,6 +1,6 @@
 package com.itechart.perfomancequery.services;
 
-import com.itechart.perfomancequery.dao.DataBaseStatement;
+import com.itechart.perfomancequery.dao.DataBaseConnectionFactory;
 import com.itechart.perfomancequery.model.report.ReportDto;
 import com.itechart.perfomancequery.model.report.ResultPerformanceTest;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
   private Logger logger = LoggerFactory.getLogger(PerformanceQueryServiceImpl.class);
 
   @Autowired
-  private DataBaseStatement dataBaseStatement;
+  private DataBaseConnectionFactory dataBaseConnectionFactory;
 
   @Override
   public ReportDto testPerformance(List<String> queries) {
@@ -34,9 +34,9 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
   private void runTests(String queries, ReportDto reportDto) {
     ExecutorService executor = Executors.newWorkStealingPool();
     List<Callable<ResultPerformanceTest>> testesTask = new ArrayList<>();
-    dataBaseStatement.getConnections().entrySet().forEach((entry -> {
+    dataBaseConnectionFactory.getConnections().entrySet().forEach((entry -> {
       Callable<ResultPerformanceTest> task = () -> testPerformanceOneInstanceDataBase(queries,
-              entry.getValue(), entry.getKey());
+              entry.getValue().get(), entry.getKey());
       testesTask.add(task);
     }));
     try {
@@ -49,7 +49,7 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
 
 
   private ResultPerformanceTest testPerformanceOneInstanceDataBase(String query, Connection connection, String dbName) throws SQLException {
-    try (Statement statement = connection.createStatement()) {
+    try (Statement statement = connection.createStatement(); connection) {
       long startTime = System.nanoTime();
 
       statement.execute(query);
