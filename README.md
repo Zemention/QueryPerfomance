@@ -6,15 +6,16 @@ API example:
 POST http://{{host}}:8080/query_perfomance
 
 request:
-
+```json
 {
   "queries":[
         "select * from news",
         "select * from author"
     ]
  }
+ ```
  response
-
+```json
 [
     {
         "result": [
@@ -45,9 +46,9 @@ request:
         "dataBaseName": "mysql"
     }
 ]
-
+ ```
 or you can choose DataBases for which you want fire performance tests for example:
-
+```json
 {
     "queries": [
         "Select * From Products;",
@@ -57,7 +58,7 @@ or you can choose DataBases for which you want fire performance tests for exampl
     "database": [
     	"postgresql"]
 }
-
+ ```
 Developer guide to plug in a new database:
 
 added to application.yml into db:
