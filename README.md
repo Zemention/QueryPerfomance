@@ -1,3 +1,5 @@
+java 9 is required
+
 This service allows us to compare performance of different sql queries against various databases.
 and benchmark the performance of different queries versions.
 
