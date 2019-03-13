@@ -1,0 +1,13 @@
+
+db:
+  dataBaseInfo:
+    -
+      name: 'mysql'
+      url: 'jdbc:mysql://192.168.99.100:3306/perfomance-test'
+      user: 'root'
+      password: 'root'
+    -
+      name: 'postgresql'
+      url: 'jdbc:postgresql://192.168.99.100:5432/queryPerformance'
+      user: 'root'
+      password: 'root'
