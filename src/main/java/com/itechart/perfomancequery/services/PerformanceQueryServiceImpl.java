@@ -40,13 +40,9 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
 
   private List<ReportDto> runTests(List<String> queries, Set<String> testForDb) {
     ExecutorService executor = Executors.newWorkStealingPool();
-    List<Callable<ReportDto>> testesTask = new ArrayList<>();
-    dataBaseConnectionFactory.getConnections().entrySet().stream().filter(entry -> testForDb.contains(entry.getKey()))
-            .forEach((entry -> {
-              Callable<ReportDto> task = () -> testPerformanceOneInstanceDataBase(queries,
-                      entry.getValue().get(), entry.getKey());
-              testesTask.add(task);
-            }));
+
+    List<Callable<ReportDto>> testesTask = getCollectOfTask(queries, testForDb);
+
     List<ReportDto> reportsDto = new ArrayList<>();
     try {
       reportsDto = executor.invokeAll(testesTask).stream()
@@ -56,6 +52,13 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
       logger.error(e.getMessage());
     }
     return reportsDto;
+  }
+
+  private List<Callable<ReportDto>> getCollectOfTask(List<String> queries, Set<String> testForDb) {
+    return dataBaseConnectionFactory.getConnections().entrySet().stream().filter(entry -> testForDb.contains(entry.getKey()))
+            .map((entry ->  (Callable<ReportDto>) () -> testPerformanceOneInstanceDataBase(queries,
+                      entry.getValue().get(), entry.getKey())
+            )).collect(Collectors.toList());
   }
 
 
