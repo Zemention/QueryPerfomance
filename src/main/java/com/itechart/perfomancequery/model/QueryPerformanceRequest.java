@@ -10,13 +10,6 @@ public class QueryPerformanceRequest {
   @NotEmpty
   private List<String> queries;
 
-  public QueryPerformanceRequest(List<String> queries) {
-    this.queries = queries;
-  }
-
-  public QueryPerformanceRequest() {
-  }
-
   public List<String> getQueries() {
     return queries;
   }

@@ -38,7 +38,8 @@ class QueryPerformanceControllerTest {
 
     @Test
     void getQueryPerformance_oneQueryWithDefaultSettings_ReturnReportForAllDataBase() throws Exception {
-        QueryPerformanceRequest content = new QueryPerformanceRequest(List.of("Select * from Table"));
+        QueryPerformanceRequest content = new QueryPerformanceRequest();
+        content.setQueries(List.of("Select * from Table"));
         ReportDto reportDto = new ReportDto();
         ResultPerformanceTest resultPerformanceTest = new ResultPerformanceTest("mysql", 1000L);
         reportDto.getResult().put("mysql",List.of(resultPerformanceTest));
@@ -50,23 +51,11 @@ class QueryPerformanceControllerTest {
                 .andExpect(jsonPath("$.result.mysql[0].resultTest").value("1000"));
     }
 
-//    @Test
-//    void shouldReturnStatusOkAndReport() throws Exception {
-//        Map<String, String> response = new HashMap<>();
-//        response.put("value", "123");
-//        when(perfomanceQueryService.testPerformance(anyString())).thenReturn("123");
-//        this.mockMvc.perform(get("/"+Constants.PATH_PERFOMANCE_QUERY)
-//                .param("query", "Select * from Table")
-//                .accept(MediaType.parseMediaType("application/json;charset=UTF-8")))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.value").value("123"));
-//    }
-//
-//    @Test
-//    void shouldReturnStatusBadRequestAndErrorMessage() throws Exception {
-//        this.mockMvc.perform(get("/"+Constants.PATH_PERFOMANCE_QUERY)
-//                .param("query", "")
-//                .accept(MediaType.parseMediaType("application/json;charset=UTF-8")))
-//                .andExpect(status().isBadRequest());
-//    }
+    @Test
+    void shouldReturnStatusBadRequestAndErrorMessage() throws Exception {
+        this.mockMvc.perform(post("/"+Constants.PATH_PERFORMANCE_QUERY)
+                .param("query", "")
+                .accept(MediaType.parseMediaType("application/json;charset=UTF-8")))
+                .andExpect(status().isBadRequest());
+    }
 }
