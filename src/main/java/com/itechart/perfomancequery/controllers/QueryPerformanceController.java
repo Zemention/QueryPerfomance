@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 
 
 @RestController
@@ -19,7 +20,7 @@ public class QueryPerformanceController {
   private PerformanceQueryService performanceQueryService;
 
   @PostMapping(Constants.PATH_PERFORMANCE_QUERY)
-  public ReportDto getQueryPerformance(@RequestBody @Valid QueryPerformanceRequest content) {
+  public List<ReportDto> getQueryPerformance(@RequestBody @Valid QueryPerformanceRequest content) {
     if(content.getDatabase() == null || content.getDatabase().isEmpty()) {
       return performanceQueryService.testPerformance(content.getQueries());
     }

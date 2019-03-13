@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Service
 public class PerformanceQueryServiceImpl implements PerformanceQueryService {
@@ -27,69 +27,70 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
 
 
   @Override
-  public ReportDto testPerformance(List<String> queries) {
+  public List<ReportDto> testPerformance(List<String> queries) {
 
     return testPerformance(queries, dataBaseConnectionFactory.getConnections().keySet());
   }
 
   @Override
-  public ReportDto testPerformance(List<String> queries, Set<String> database) {
-    ReportDto reportDto = new ReportDto();
-    queries.forEach(query -> runTests(query, reportDto,  database));
+  public List<ReportDto> testPerformance(List<String> queries, Set<String> database) {
 
-    return reportDto;
-
+    return runTests(queries, database);
   }
 
-  private void runTests(String queries, ReportDto reportDto, Set<String> testForDb) {
+  private List<ReportDto> runTests(List<String> queries, Set<String> testForDb) {
     ExecutorService executor = Executors.newWorkStealingPool();
-    List<Callable<ResultPerformanceTest>> testesTask = new ArrayList<>();
+    List<Callable<ReportDto>> testesTask = new ArrayList<>();
     dataBaseConnectionFactory.getConnections().entrySet().stream().filter(entry -> testForDb.contains(entry.getKey()))
             .forEach((entry -> {
-      Callable<ResultPerformanceTest> task = () -> testPerformanceOneInstanceDataBase(queries,
-              entry.getValue().get(), entry.getKey());
-      testesTask.add(task);
-    }));
+              Callable<ReportDto> task = () -> testPerformanceOneInstanceDataBase(queries,
+                      entry.getValue().get(), entry.getKey());
+              testesTask.add(task);
+            }));
+    List<ReportDto> reportsDto = new ArrayList<>();
     try {
-      executor.invokeAll(testesTask).forEach(future -> addResultToReport(reportDto, future));
+      reportsDto = executor.invokeAll(testesTask).stream()
+              .map(this::getReport).collect(Collectors.toList());
+      return reportsDto;
     } catch (Exception e) {
       logger.error(e.getMessage());
-      reportDto.setErrorMessage(e.getMessage());
     }
+    return reportsDto;
   }
 
 
-  private ResultPerformanceTest testPerformanceOneInstanceDataBase(String query, Connection connection, String dbName) throws SQLException {
-    try (Statement statement = connection.createStatement(); connection) {
-      long startTime = System.nanoTime();
-
-      statement.execute(query);
-      long finishTime = System.nanoTime() - startTime;
-
-      connection.rollback();
-
-      return new ResultPerformanceTest(query, finishTime, dbName);
-    } catch (SQLException e) {
-      logger.error(e.getMessage());
-      throw new SQLException(e);
-    }
-  }
-
-  private void addResultToReport(ReportDto reportDto, Future<ResultPerformanceTest> future) {
-    try {
-      ResultPerformanceTest resultTest = future.get();
-      List<ResultPerformanceTest> resultsTest = reportDto.getResult().get(resultTest.getDataBase());
-      if (resultsTest == null) {
-        resultsTest = new ArrayList<>();
-        resultsTest.add(future.get());
-        reportDto.getResult().put(resultTest.getDataBase(), resultsTest);
-      } else {
-        reportDto.getResult().get(resultTest.getDataBase()).add(future.get());
+  private ReportDto testPerformanceOneInstanceDataBase(List<String> query, Connection connection, String dbName) {
+    List<ResultPerformanceTest> resultPerformanceTests = query.stream().map(q -> {
+      long finishTime = 0;
+      try {
+        Statement statement = connection.createStatement();
+        finishTime = fireTest(q, connection, statement);
+      } catch (SQLException e) {
+        logger.error(e.getMessage());
       }
+      return new ResultPerformanceTest(q, finishTime);
+    }).collect(Collectors.toList());
+    return new ReportDto(resultPerformanceTests, dbName);
+  }
+
+  private long fireTest(String query, Connection connection, Statement statement) throws SQLException {
+    long startTime = System.nanoTime();
+    statement.execute(query);
+    long finishTime = System.nanoTime() - startTime;
+
+    connection.rollback();
+    return finishTime;
+  }
+
+  private ReportDto getReport(Future<ReportDto> future) {
+    ReportDto reportWithError = new ReportDto();
+    try {
+      return future.get();
     } catch (InterruptedException | ExecutionException e) {
       Thread.currentThread().interrupt();
-      reportDto.setErrorMessage(e.toString());
+      reportWithError.setErrorMessage(e.getMessage());
       logger.error(e.getMessage());
     }
+    return reportWithError;
   }
 }

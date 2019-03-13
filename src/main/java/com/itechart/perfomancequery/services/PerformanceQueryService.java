@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface PerformanceQueryService {
-  ReportDto testPerformance(List<String> queries);
+  List<ReportDto> testPerformance(List<String> queries);
 
-  ReportDto testPerformance(List<String> queries, Set<String> database);
+  List<ReportDto> testPerformance(List<String> queries, Set<String> database);
 }
