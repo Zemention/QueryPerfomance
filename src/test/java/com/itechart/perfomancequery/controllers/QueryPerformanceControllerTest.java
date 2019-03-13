@@ -42,13 +42,13 @@ class QueryPerformanceControllerTest {
         content.setQueries(List.of("Select * from Table"));
         ReportDto reportDto = new ReportDto();
         ResultPerformanceTest resultPerformanceTest = new ResultPerformanceTest("mysql", 1000L);
-        reportDto.getResult().put("mysql",List.of(resultPerformanceTest));
-        when(perfomanceQueryService.testPerformance(anyList())).thenReturn(reportDto);
+        reportDto.getResult().add(resultPerformanceTest);
+        when(perfomanceQueryService.testPerformance(anyList())).thenReturn(List.of(reportDto));
         this.mockMvc.perform(post("/"+Constants.PATH_PERFORMANCE_QUERY)
                 .content(TestUtils.convertObjectToJsonBytes(content)).contentType(TestUtils.APPLICATION_JSON_UTF8)
                 .accept(MediaType.parseMediaType("application/json")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.mysql[0].resultTest").value("1000"));
+                .andExpect(jsonPath("$[0].result[0].resultTest").value("1000"));
     }
 
     @Test

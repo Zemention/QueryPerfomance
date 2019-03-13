@@ -60,19 +60,18 @@ public class PerformanceQueryServiceTest {
   }
 
   @Test
-  public void testPerformance_oneQueryDefaultSettingsToOneDb_returnReportForAllConnectedDb() throws Exception {
+  public void testPerformance_oneQueryDefaultSettingsToOneDb_returnReportForAllConnectedDb() {
     List<String> queries = List.of("query1");
-    ReportDto reportDto = performanceQueryService.testPerformance(queries);
-    assertTrue(reportDto.getResult().values().stream().anyMatch((performanceResult -> performanceResult.get(0).getResultTest() >= 1000 * 100_0000)));
+    List<ReportDto> reportDto = performanceQueryService.testPerformance(queries);
+    assertTrue(reportDto.get(0).getResult().stream().anyMatch((performanceResult -> performanceResult.getResultTest() >= 1000 * 100_0000)));
   }
 
   @Test
-  public void testPerformance_manyQueryDefaultSettingsToOneDb_returnReportForAllConnectedDb() throws Exception {
+  public void testPerformance_manyQueryDefaultSettingsToOneDb_returnReportForAllConnectedDb() {
     List<String> queries = List.of("query1", "query2");
-    Map<String, Supplier<Connection>> connections = new HashMap<>();
 
-    ReportDto reportDto = performanceQueryService.testPerformance(queries);
-    assertTrue(reportDto.getResult().values().stream().anyMatch((performanceResult -> performanceResult.get(0).getResultTest() >= 1000 * 100_0000)));
+    List<ReportDto>  reportDto = performanceQueryService.testPerformance(queries);
+    assertTrue(reportDto.get(0).getResult().stream().anyMatch((performanceResult -> performanceResult.getResultTest() >= 1000 * 100_0000)));
   }
 
 
