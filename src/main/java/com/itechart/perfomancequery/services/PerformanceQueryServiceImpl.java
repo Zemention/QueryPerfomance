@@ -13,7 +13,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 @Service
 public class PerformanceQueryServiceImpl implements PerformanceQueryService {
@@ -23,18 +25,27 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
   @Autowired
   private DataBaseConnectionFactory dataBaseConnectionFactory;
 
+
   @Override
   public ReportDto testPerformance(List<String> queries) {
-    ReportDto reportDto = new ReportDto();
-    queries.forEach(query -> runTests(query, reportDto));
 
-    return reportDto;
+    return testPerformance(queries, dataBaseConnectionFactory.getConnections().keySet());
   }
 
-  private void runTests(String queries, ReportDto reportDto) {
+  @Override
+  public ReportDto testPerformance(List<String> queries, Set<String> database) {
+    ReportDto reportDto = new ReportDto();
+    queries.forEach(query -> runTests(query, reportDto,  database));
+
+    return reportDto;
+
+  }
+
+  private void runTests(String queries, ReportDto reportDto, Set<String> testForDb) {
     ExecutorService executor = Executors.newWorkStealingPool();
     List<Callable<ResultPerformanceTest>> testesTask = new ArrayList<>();
-    dataBaseConnectionFactory.getConnections().entrySet().forEach((entry -> {
+    dataBaseConnectionFactory.getConnections().entrySet().stream().filter(entry -> testForDb.contains(entry.getKey()))
+            .forEach((entry -> {
       Callable<ResultPerformanceTest> task = () -> testPerformanceOneInstanceDataBase(queries,
               entry.getValue().get(), entry.getKey());
       testesTask.add(task);

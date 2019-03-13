@@ -18,10 +18,13 @@ public class QueryPerformanceController {
   @Autowired
   private PerformanceQueryService performanceQueryService;
 
-  //TODO recive parameters for query
   @PostMapping(Constants.PATH_PERFORMANCE_QUERY)
   public ReportDto getQueryPerformance(@RequestBody @Valid QueryPerformanceRequest content) {
-    return performanceQueryService.testPerformance(content.getQueries());
+    if(content.getDatabase() == null || content.getDatabase().isEmpty()) {
+      return performanceQueryService.testPerformance(content.getQueries());
+    }
+    else
+      return performanceQueryService.testPerformance(content.getQueries(), content.getDatabase());
   }
 
 }
