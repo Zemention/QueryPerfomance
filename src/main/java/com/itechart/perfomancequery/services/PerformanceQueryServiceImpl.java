@@ -3,10 +3,6 @@ package com.itechart.perfomancequery.services;
 import com.itechart.perfomancequery.dao.DataBaseConnectionFactory;
 import com.itechart.perfomancequery.model.report.ReportDto;
 import com.itechart.perfomancequery.model.report.ResultPerformanceTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -14,8 +10,17 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class PerformanceQueryServiceImpl implements PerformanceQueryService {
@@ -54,15 +59,18 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
     return reportsDto;
   }
 
-  private List<Callable<ReportDto>> getCollectOfTask(List<String> queries, Set<String> testForDb) {
-    return dataBaseConnectionFactory.getConnections().entrySet().stream().filter(entry -> testForDb.contains(entry.getKey()))
-            .map((entry ->  (Callable<ReportDto>) () -> testPerformanceOneInstanceDataBase(queries,
-                      entry.getValue().get(), entry.getKey())
+  private List<Callable<ReportDto>> getCollectOfTask(List<String> queries,
+                                                     Set<String> testForDb) {
+    return dataBaseConnectionFactory.getConnections().entrySet().stream()
+            .filter(entry -> testForDb.contains(entry.getKey()))
+            .map((entry -> (Callable<ReportDto>) () -> testPerformanceOneInstanceDataBase(queries,
+                    entry.getValue().get(), entry.getKey())
             )).collect(Collectors.toList());
   }
 
 
-  private ReportDto testPerformanceOneInstanceDataBase(List<String> query, Connection connection, String dbName) {
+  private ReportDto testPerformanceOneInstanceDataBase(List<String> query,
+                                                       Connection connection, String dbName) {
     List<ResultPerformanceTest> resultPerformanceTests = query.stream().map(q -> {
       long finishTime = 0;
       try {
@@ -76,7 +84,8 @@ public class PerformanceQueryServiceImpl implements PerformanceQueryService {
     return new ReportDto(resultPerformanceTests, dbName);
   }
 
-  private long fireTest(String query, Connection connection, Statement statement) throws SQLException {
+  private long fireTest(String query,
+                        Connection connection, Statement statement) throws SQLException {
     long startTime = System.nanoTime();
     statement.execute(query);
     long finishTime = System.nanoTime() - startTime;
